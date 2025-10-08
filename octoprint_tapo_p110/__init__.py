@@ -9,7 +9,23 @@ __copyright__ = "Copyright (C) 2025 Gaurav Pangam - Released under terms of the 
 
 import octoprint.plugin
 import flask
-from PyP100 import PyP110
+import subprocess
+import sys
+
+# Try to import PyP100, install if not available
+try:
+    from PyP100 import PyP110
+except ImportError:
+    try:
+        # Try to install PyP100 if not available
+        subprocess.check_call([
+            sys.executable, "-m", "pip", "install",
+            "git+https://github.com/almottier/TapoP100.git@main"
+        ])
+        from PyP100 import PyP110
+    except Exception as e:
+        # If installation fails, we'll handle it in the plugin
+        PyP110 = None
 
 
 class TapoP110Plugin(octoprint.plugin.StartupPlugin,
@@ -107,6 +123,11 @@ class TapoP110Plugin(octoprint.plugin.StartupPlugin,
         with self.connection_lock:
             if self.device:
                 return True
+
+            # Check if PyP110 is available
+            if PyP110 is None:
+                self._logger.error("PyP100 library not available. Please install manually: pip install git+https://github.com/almottier/TapoP100.git@main")
+                return False
 
             device_ip = self._settings.get(["device_ip"])
             username = self._settings.get(["username"])

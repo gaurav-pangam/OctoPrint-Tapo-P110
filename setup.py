@@ -1,5 +1,5 @@
 # coding=utf-8
-import setuptools
+from setuptools import setup, find_packages
 
 ########################################################################################################################
 
@@ -27,42 +27,49 @@ def package_data_dirs(source, sub_folders):
                 dirs.append(os.path.join(dirname, f))
     return dirs
 
-def params():
-    # Our metadata, as defined above
-    name = plugin_name
-    version = plugin_version
-    description = plugin_description
-    author = plugin_author
-    author_email = plugin_author_email
-    url = plugin_url
-    license = plugin_license
+setup(
+    name=plugin_name,
+    version=plugin_version,
+    description=plugin_description,
+    author=plugin_author,
+    author_email=plugin_author_email,
+    url=plugin_url,
+    license=plugin_license,
 
-    # we only have our plugin package to install
-    packages = [plugin_package]
+    packages=[plugin_package],
+    package_data={
+        plugin_package: package_data_dirs(plugin_package, ['static', 'templates', 'translations'] + plugin_additional_data)
+    },
+    include_package_data=True,
+    zip_safe=False,
 
-    # we might have additional data files in sub folders that need to be installed too
-    package_data = {plugin_package: package_data_dirs(plugin_package, ['static', 'templates', 'translations'] + plugin_additional_data)}
-    include_package_data = True
+    install_requires=[
+        "requests>=2.24.0",
+        "PyP100"  # Will be installed separately
+    ],
 
-    # If you have any package data that needs to be accessible on the file system, such as templates or static assets
-    # this plugin is not zip_safe.
-    zip_safe = False
+    python_requires=">=3.7",
 
-    # Read the requirements from our requirements.txt file
-    install_requires = [
-        "git+https://github.com/almottier/TapoP100.git@main",
-        "requests>=2.24.0"
-    ]
+    entry_points={
+        "octoprint.plugin": [
+            "%s = %s" % (plugin_identifier, plugin_package)
+        ]
+    },
 
-    # Python version requirement
-    python_requires = ">=3.7"
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: GNU Affero General Public License v3",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+        "Topic :: System :: Hardware"
+    ],
 
-    # Hook the plugin into the "octoprint.plugin" entry point, mapping the plugin_identifier to the plugin_package.
-    # That way OctoPrint will be able to find the plugin and load it.
-    entry_points = {
-        "octoprint.plugin": ["%s = %s" % (plugin_identifier, plugin_package)]
-    }
-
-    return locals()
-
-setuptools.setup(**params())
+    keywords="octoprint plugin tapo p110 smart plug 3d printing automation energy monitoring"
+)
