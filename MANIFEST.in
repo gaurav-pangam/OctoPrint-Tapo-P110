@@ -1,0 +1,6 @@
+include README.md
+include LICENSE
+include requirements.txt
+recursive-include octoprint_tapo_p110/templates *
+recursive-include octoprint_tapo_p110/static *
+recursive-include octoprint_tapo_p110/translations *

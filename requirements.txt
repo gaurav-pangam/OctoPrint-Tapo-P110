@@ -1,0 +1,8 @@
+# OctoPrint Tapo P110 Plugin Requirements
+# Using almottier fork for better firmware compatibility
+
+# Core Tapo P110 library
+git+https://github.com/almottier/TapoP100.git@main
+
+# HTTP requests
+requests>=2.24.0

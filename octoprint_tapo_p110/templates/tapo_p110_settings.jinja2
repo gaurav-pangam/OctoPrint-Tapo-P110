@@ -1,0 +1,101 @@
+<div class="control-group">
+    <label class="control-label">{{ _('Device IP Address') }}</label>
+    <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: settings.plugins.tapo_p110.device_ip" placeholder="192.168.1.100">
+        <span class="help-block">{{ _('IP address of your Tapo P110 smart plug') }}</span>
+    </div>
+</div>
+
+<div class="control-group">
+    <label class="control-label">{{ _('Tapo Username') }}</label>
+    <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: settings.plugins.tapo_p110.username" placeholder="your@email.com">
+        <span class="help-block">{{ _('Your Tapo account email address') }}</span>
+    </div>
+</div>
+
+<div class="control-group">
+    <label class="control-label">{{ _('Tapo Password') }}</label>
+    <div class="controls">
+        <input type="password" class="input-block-level" data-bind="value: settings.plugins.tapo_p110.password">
+        <span class="help-block">{{ _('Your Tapo account password') }}</span>
+    </div>
+</div>
+
+<h4>{{ _('Automation Settings') }}</h4>
+
+<div class="control-group">
+    <div class="controls">
+        <label class="checkbox">
+            <input type="checkbox" data-bind="checked: settings.plugins.tapo_p110.auto_on_print_start">
+            {{ _('Turn ON when print starts') }}
+        </label>
+        <span class="help-block">{{ _('Automatically turn on the P110 when a print job starts') }}</span>
+    </div>
+</div>
+
+<div class="control-group">
+    <div class="controls">
+        <label class="checkbox">
+            <input type="checkbox" data-bind="checked: settings.plugins.tapo_p110.auto_off_print_end">
+            {{ _('Turn OFF when print ends') }}
+        </label>
+        <span class="help-block">{{ _('Automatically turn off the P110 when a print job completes') }}</span>
+    </div>
+</div>
+
+<div class="control-group" data-bind="visible: settings.plugins.tapo_p110.auto_off_print_end">
+    <label class="control-label">{{ _('Auto-off Delay (seconds)') }}</label>
+    <div class="controls">
+        <input type="number" class="input-small" data-bind="value: settings.plugins.tapo_p110.auto_off_delay" min="0" max="3600">
+        <span class="help-block">{{ _('Delay before turning off after print completion (0-3600 seconds)') }}</span>
+    </div>
+</div>
+
+<h4>{{ _('Energy Monitoring') }}</h4>
+
+<div class="control-group">
+    <div class="controls">
+        <label class="checkbox">
+            <input type="checkbox" data-bind="checked: settings.plugins.tapo_p110.enable_energy_monitoring">
+            {{ _('Enable energy monitoring') }}
+        </label>
+        <span class="help-block">{{ _('Monitor and log power consumption (P110 feature)') }}</span>
+    </div>
+</div>
+
+<div class="control-group" data-bind="visible: settings.plugins.tapo_p110.enable_energy_monitoring">
+    <label class="control-label">{{ _('Update Interval (seconds)') }}</label>
+    <div class="controls">
+        <input type="number" class="input-small" data-bind="value: settings.plugins.tapo_p110.energy_update_interval" min="10" max="300">
+        <span class="help-block">{{ _('How often to update energy data (10-300 seconds)') }}</span>
+    </div>
+</div>
+
+<div class="form-actions">
+    <button class="btn btn-primary" data-bind="click: function() { testConnection(); }">
+        <i class="fas fa-plug"></i> {{ _('Test Connection') }}
+    </button>
+</div>
+
+<div class="alert alert-info">
+    <h4>{{ _('Tapo P110 Plugin') }}</h4>
+    <p>{{ _('This plugin provides direct control of your Tapo P110 smart plug with the following features:') }}</p>
+    <ul>
+        <li>{{ _('Manual power control (on/off/toggle)') }}</li>
+        <li>{{ _('Automatic power control based on print events') }}</li>
+        <li>{{ _('Real-time energy monitoring and logging') }}</li>
+        <li>{{ _('Device status monitoring') }}</li>
+        <li>{{ _('Compatible with P110 firmware 1.1.3+') }}</li>
+    </ul>
+</div>
+
+<div class="alert alert-warning">
+    <h4>{{ _('Setup Notes') }}</h4>
+    <ul>
+        <li>{{ _('Ensure your P110 is on the same network as OctoPrint') }}</li>
+        <li>{{ _('Use the same credentials as your Tapo mobile app') }}</li>
+        <li>{{ _('Set a static IP for your P110 in your router settings') }}</li>
+        <li>{{ _('Test the connection after configuration') }}</li>
+    </ul>
+</div>

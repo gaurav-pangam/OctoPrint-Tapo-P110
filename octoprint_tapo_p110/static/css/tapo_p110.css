@@ -1,0 +1,254 @@
+/*
+ * CSS for OctoPrint-Tapo-P110 Plugin
+ * Author: Gaurav Pangam
+ * License: AGPLv3
+ */
+
+/* Main plugin tab styling */
+#tab_plugin_tapo_p110 {
+    padding: 15px;
+}
+
+/* Control buttons styling */
+#tab_plugin_tapo_p110 .btn-large {
+    margin: 5px;
+    min-width: 120px;
+    font-weight: bold;
+}
+
+#tab_plugin_tapo_p110 .btn-large i {
+    margin-right: 8px;
+}
+
+/* Status indicators */
+.tapo-status-on {
+    color: #5cb85c;
+    font-weight: bold;
+}
+
+.tapo-status-off {
+    color: #d9534f;
+    font-weight: bold;
+}
+
+/* Energy monitoring cards */
+.tapo-energy-card {
+    background: #f8f8f8;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
+    margin: 10px 0;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.tapo-energy-card:hover {
+    background: #f0f0f0;
+    border-color: #ccc;
+}
+
+.tapo-energy-card h4 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.tapo-energy-value {
+    font-size: 18px;
+    font-weight: bold;
+    padding: 8px 12px;
+    border-radius: 4px;
+    display: inline-block;
+    min-width: 80px;
+}
+
+/* Energy value colors */
+.tapo-power-value {
+    background: #d9edf7;
+    color: #31708f;
+    border: 1px solid #bce8f1;
+}
+
+.tapo-energy-today {
+    background: #dff0d8;
+    color: #3c763d;
+    border: 1px solid #d6e9c6;
+}
+
+.tapo-energy-month {
+    background: #fcf8e3;
+    color: #8a6d3b;
+    border: 1px solid #faebcc;
+}
+
+.tapo-runtime-value {
+    background: #f2dede;
+    color: #a94442;
+    border: 1px solid #ebccd1;
+}
+
+/* Device status table */
+.tapo-status-table {
+    margin-top: 15px;
+}
+
+.tapo-status-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.tapo-status-table td:first-child {
+    font-weight: bold;
+    color: #555;
+    width: 30%;
+}
+
+/* Connection status indicators */
+.tapo-connecting {
+    color: #f0ad4e;
+    font-style: italic;
+}
+
+.tapo-connected {
+    color: #5cb85c;
+}
+
+.tapo-disconnected {
+    color: #d9534f;
+}
+
+/* Settings page styling */
+#settings_plugin_tapo_p110 .control-group {
+    margin-bottom: 20px;
+}
+
+#settings_plugin_tapo_p110 .help-block {
+    color: #666;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+#settings_plugin_tapo_p110 h4 {
+    margin-top: 30px;
+    margin-bottom: 15px;
+    color: #333;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 5px;
+}
+
+/* Alert styling improvements */
+.tapo-alert {
+    margin: 15px 0;
+    padding: 12px;
+    border-radius: 6px;
+}
+
+.tapo-alert-success {
+    background: #dff0d8;
+    border: 1px solid #d6e9c6;
+    color: #3c763d;
+}
+
+.tapo-alert-error {
+    background: #f2dede;
+    border: 1px solid #ebccd1;
+    color: #a94442;
+}
+
+.tapo-alert-info {
+    background: #d9edf7;
+    border: 1px solid #bce8f1;
+    color: #31708f;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    #tab_plugin_tapo_p110 .btn-large {
+        display: block;
+        width: 100%;
+        margin: 5px 0;
+    }
+    
+    .tapo-energy-card {
+        margin: 5px 0;
+    }
+    
+    .tapo-energy-value {
+        font-size: 16px;
+    }
+}
+
+/* Loading spinner */
+.tapo-spinner {
+    display: inline-block;
+    margin-right: 8px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Button states */
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Status badges */
+.tapo-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.tapo-badge-on {
+    background: #5cb85c;
+    color: white;
+}
+
+.tapo-badge-off {
+    background: #d9534f;
+    color: white;
+}
+
+/* Form improvements */
+.tapo-form-section {
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 6px;
+    margin: 20px 0;
+    border: 1px solid #e5e5e5;
+}
+
+.tapo-form-section h4 {
+    margin-top: 0;
+    color: #333;
+}
+
+/* Test connection button */
+.tapo-test-connection {
+    margin-top: 15px;
+}
+
+/* Energy monitoring section */
+.tapo-energy-section {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.tapo-energy-section h3 {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+}

@@ -1,0 +1,134 @@
+<div class="row-fluid">
+    <div class="span6">
+        <h3>{{ _('Device Control') }}</h3>
+        
+        <div class="control-group">
+            <div class="controls">
+                <button class="btn btn-large btn-success" data-bind="click: turnOn, enable: !isConnecting()">
+                    <i class="fas fa-power-off"></i> {{ _('Turn ON') }}
+                </button>
+                <button class="btn btn-large btn-danger" data-bind="click: turnOff, enable: !isConnecting()">
+                    <i class="fas fa-power-off"></i> {{ _('Turn OFF') }}
+                </button>
+                <button class="btn btn-large btn-warning" data-bind="click: toggle, enable: !isConnecting()">
+                    <i class="fas fa-sync"></i> {{ _('Toggle') }}
+                </button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <div class="controls">
+                <button class="btn" data-bind="click: refreshStatus, enable: !isConnecting()">
+                    <i class="fas fa-refresh"></i> {{ _('Refresh Status') }}
+                </button>
+                <button class="btn" data-bind="click: testConnection, enable: !isConnecting()">
+                    <i class="fas fa-plug"></i> {{ _('Test Connection') }}
+                </button>
+            </div>
+        </div>
+
+        <div data-bind="visible: isConnecting">
+            <i class="fas fa-spinner fa-spin"></i> {{ _('Connecting...') }}
+        </div>
+    </div>
+
+    <div class="span6">
+        <h3>{{ _('Device Status') }}</h3>
+        
+        <div data-bind="visible: deviceStatus">
+            <table class="table table-condensed">
+                <tr>
+                    <td><strong>{{ _('Status') }}:</strong></td>
+                    <td>
+                        <span data-bind="visible: deviceStatus() && deviceStatus().device_on" class="label label-success">
+                            <i class="fas fa-power-off"></i> {{ _('ON') }}
+                        </span>
+                        <span data-bind="visible: deviceStatus() && !deviceStatus().device_on" class="label label-important">
+                            <i class="fas fa-power-off"></i> {{ _('OFF') }}
+                        </span>
+                    </td>
+                </tr>
+                <tr data-bind="visible: deviceStatus() && deviceStatus().nickname">
+                    <td><strong>{{ _('Name') }}:</strong></td>
+                    <td data-bind="text: deviceStatus() ? deviceStatus().nickname : ''"></td>
+                </tr>
+                <tr data-bind="visible: deviceStatus() && deviceStatus().model">
+                    <td><strong>{{ _('Model') }}:</strong></td>
+                    <td data-bind="text: deviceStatus() ? deviceStatus().model : ''"></td>
+                </tr>
+                <tr data-bind="visible: deviceStatus() && deviceStatus().fw_ver">
+                    <td><strong>{{ _('Firmware') }}:</strong></td>
+                    <td data-bind="text: deviceStatus() ? deviceStatus().fw_ver : ''"></td>
+                </tr>
+                <tr data-bind="visible: deviceStatus() && deviceStatus().signal_level">
+                    <td><strong>{{ _('Signal') }}:</strong></td>
+                    <td data-bind="text: deviceStatus() ? deviceStatus().signal_level : ''"></td>
+                </tr>
+                <tr data-bind="visible: deviceStatus() && deviceStatus().device_on && deviceStatus().on_time">
+                    <td><strong>{{ _('On Time') }}:</strong></td>
+                    <td data-bind="text: deviceStatus() ? formatOnTime(deviceStatus().on_time) : ''"></td>
+                </tr>
+            </table>
+        </div>
+
+        <div data-bind="visible: !deviceStatus()" class="alert alert-info">
+            {{ _('No device status available. Click "Refresh Status" to update.') }}
+        </div>
+    </div>
+</div>
+
+<div class="row-fluid" data-bind="visible: energyData">
+    <div class="span12">
+        <h3>{{ _('Energy Monitoring') }}</h3>
+        
+        <div class="row-fluid">
+            <div class="span3">
+                <div class="well text-center">
+                    <h4>{{ _('Current Power') }}</h4>
+                    <span class="label label-info" style="font-size: 14px;" data-bind="text: energyData() ? formatPower(energyData().current_power) : '0 W'"></span>
+                </div>
+            </div>
+            <div class="span3">
+                <div class="well text-center">
+                    <h4>{{ _('Today Energy') }}</h4>
+                    <span class="label label-success" style="font-size: 14px;" data-bind="text: energyData() ? formatEnergy(energyData().today_energy) : '0 Wh'"></span>
+                </div>
+            </div>
+            <div class="span3">
+                <div class="well text-center">
+                    <h4>{{ _('Month Energy') }}</h4>
+                    <span class="label label-warning" style="font-size: 14px;" data-bind="text: energyData() ? formatEnergy(energyData().month_energy) : '0 Wh'"></span>
+                </div>
+            </div>
+            <div class="span3">
+                <div class="well text-center">
+                    <h4>{{ _('Today Runtime') }}</h4>
+                    <span class="label label-inverse" style="font-size: 14px;" data-bind="text: energyData() ? formatRuntime(energyData().today_runtime) : '0 min'"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <div class="controls">
+                <button class="btn btn-small" data-bind="click: refreshEnergy, enable: !isConnecting()">
+                    <i class="fas fa-refresh"></i> {{ _('Refresh Energy Data') }}
+                </button>
+                <label class="checkbox inline">
+                    <input type="checkbox" data-bind="checked: autoRefreshEnergy"> {{ _('Auto-refresh every 30s') }}
+                </label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row-fluid">
+    <div class="span12">
+        <div data-bind="visible: lastError()" class="alert alert-error">
+            <strong>{{ _('Error') }}:</strong> <span data-bind="text: lastError"></span>
+        </div>
+        
+        <div data-bind="visible: lastSuccess()" class="alert alert-success">
+            <strong>{{ _('Success') }}:</strong> <span data-bind="text: lastSuccess"></span>
+        </div>
+    </div>
+</div>
