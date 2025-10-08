@@ -1,6 +1,12 @@
 include README.md
 include LICENSE
 include requirements.txt
-recursive-include octoprint_tapo_p110/templates *
-recursive-include octoprint_tapo_p110/static *
-recursive-include octoprint_tapo_p110/translations *
+include MANIFEST.in
+include PROJECT_OVERVIEW.md
+include INSTALLATION_TROUBLESHOOTING.md
+include install.sh
+include test_plugin.py
+include debug_connection.py
+recursive-include octoprint_tapo_p110 *
+global-exclude __pycache__
+global-exclude *.py[co]
