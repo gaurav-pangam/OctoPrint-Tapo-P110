@@ -119,7 +119,7 @@ class TapoP110Plugin(octoprint.plugin.StartupPlugin,
     ##~~ Device Control Methods
 
     def _connect(self):
-        """Connect to the P110 device"""
+        """Connect to the P110 device with timeout handling"""
         with self.connection_lock:
             if self.device:
                 return True
@@ -137,50 +137,113 @@ class TapoP110Plugin(octoprint.plugin.StartupPlugin,
                 self._logger.error("Device configuration incomplete")
                 return False
 
-            try:
-                self._logger.info(f"Connecting to P110 at {device_ip}")
-                self.device = PyP110.P110(device_ip, username, password)
+            # Try connection with increasing timeouts to handle OctoPrint environment issues
+            timeout_attempts = [5, 10, 15, 30]  # Progressive timeout values
 
-                self._logger.debug("Performing handshake...")
-                self.device.handshake()
+            for attempt, timeout_seconds in enumerate(timeout_attempts, 1):
+                try:
+                    self._logger.info(f"Connecting to P110 at {device_ip} (attempt {attempt}/{len(timeout_attempts)}, timeout: {timeout_seconds}s)")
 
-                self._logger.debug("Performing login...")
-                self.device.login()
+                    # Create device instance
+                    self.device = PyP110.P110(device_ip, username, password)
 
-                # Get device info to verify it's a P110
-                self._logger.debug("Getting device info...")
-                self.device_info = self.device.getDeviceInfo()
+                    # Try to configure timeout if possible
+                    self._configure_device_timeout(self.device, timeout_seconds)
 
-                # Handle different response formats
-                if isinstance(self.device_info, dict):
-                    device_model = self.device_info.get('model', 'Unknown')
-                    firmware_version = self.device_info.get('fw_ver', 'Unknown')
-                else:
-                    # Some firmware versions return different formats
-                    self._logger.warning(f"Unexpected device info format: {type(self.device_info)}")
-                    device_model = 'Unknown'
-                    firmware_version = 'Unknown'
+                    self._logger.debug("Performing handshake...")
+                    self.device.handshake()
 
-                self._logger.info(f"Connected to {device_model} with firmware {firmware_version}")
+                    self._logger.debug("Performing login...")
+                    self.device.login()
 
-                if device_model != 'P110' and device_model != 'Unknown':
-                    self._logger.warning(f"Expected P110, but connected to {device_model}")
+                    # Get device info to verify it's a P110
+                    self._logger.debug("Getting device info...")
+                    self.device_info = self.device.getDeviceInfo()
 
-                return True
+                    # Handle different response formats
+                    if isinstance(self.device_info, dict):
+                        device_model = self.device_info.get('model', 'Unknown')
+                        firmware_version = self.device_info.get('fw_ver', 'Unknown')
+                    else:
+                        # Some firmware versions return different formats
+                        self._logger.warning(f"Unexpected device info format: {type(self.device_info)}")
+                        device_model = 'Unknown'
+                        firmware_version = 'Unknown'
 
-            except KeyError as e:
-                self._logger.error(f"Failed to connect to P110 - Response format error: {e}")
-                self._logger.error("This might be a firmware compatibility issue. Try updating your P110 firmware.")
-                self.device = None
-                return False
-            except Exception as e:
-                self._logger.error(f"Failed to connect to P110: {e}")
-                self._logger.error(f"Error type: {type(e).__name__}")
-                # Log more details for debugging
-                import traceback
-                self._logger.debug(f"Full traceback: {traceback.format_exc()}")
-                self.device = None
-                return False
+                    self._logger.info(f"Connected to {device_model} with firmware {firmware_version} (timeout: {timeout_seconds}s)")
+
+                    if device_model != 'P110' and device_model != 'Unknown':
+                        self._logger.warning(f"Expected P110, but connected to {device_model}")
+
+                    return True
+
+                except (TimeoutError, ConnectionError) as e:
+                    self._logger.warning(f"Timeout/Connection error on attempt {attempt} ({timeout_seconds}s): {e}")
+                    self.device = None
+                    if attempt < len(timeout_attempts):
+                        self._logger.info(f"Retrying with longer timeout...")
+                        continue
+                    else:
+                        self._logger.error("All timeout attempts failed")
+                        return False
+
+                except KeyError as e:
+                    self._logger.error(f"Failed to connect to P110 - Response format error: {e}")
+                    self._logger.error("This might be a firmware compatibility issue. Try updating your P110 firmware.")
+                    self.device = None
+                    return False
+
+                except Exception as e:
+                    error_type = type(e).__name__
+
+                    # Handle specific timeout-related errors
+                    if 'timeout' in str(e).lower() or 'read timed out' in str(e).lower():
+                        self._logger.warning(f"Timeout error on attempt {attempt} ({timeout_seconds}s): {e}")
+                        self.device = None
+                        if attempt < len(timeout_attempts):
+                            self._logger.info(f"Retrying with longer timeout...")
+                            continue
+                        else:
+                            self._logger.error("All timeout attempts failed")
+                            return False
+                    else:
+                        # Non-timeout error, don't retry
+                        self._logger.error(f"Failed to connect to P110: {e}")
+                        self._logger.error(f"Error type: {error_type}")
+                        # Log more details for debugging
+                        import traceback
+                        self._logger.debug(f"Full traceback: {traceback.format_exc()}")
+                        self.device = None
+                        return False
+
+            return False
+
+    def _configure_device_timeout(self, device, timeout_seconds):
+        """Configure timeout for PyP100 device to handle OctoPrint environment issues"""
+        try:
+            # Try different ways to set timeout based on PyP100 implementation
+            if hasattr(device, 'timeout'):
+                device.timeout = timeout_seconds
+                self._logger.debug(f"Set device.timeout = {timeout_seconds}")
+            elif hasattr(device, '_timeout'):
+                device._timeout = timeout_seconds
+                self._logger.debug(f"Set device._timeout = {timeout_seconds}")
+            elif hasattr(device, 'session'):
+                if hasattr(device.session, 'timeout'):
+                    device.session.timeout = timeout_seconds
+                    self._logger.debug(f"Set session.timeout = {timeout_seconds}")
+
+            # Try to configure requests session if available
+            if hasattr(device, 'session'):
+                import requests.adapters
+                # Configure adapter with timeout
+                adapter = requests.adapters.HTTPAdapter()
+                device.session.mount('http://', adapter)
+                device.session.mount('https://', adapter)
+                self._logger.debug(f"Configured session adapters")
+
+        except Exception as e:
+            self._logger.debug(f"Could not configure timeout: {e}")
 
     def _disconnect(self):
         """Disconnect from the device"""
@@ -270,7 +333,7 @@ class TapoP110Plugin(octoprint.plugin.StartupPlugin,
             return None
 
     def _test_connection(self):
-        """Test connection to device with detailed debugging"""
+        """Test connection to device with detailed debugging and timeout handling"""
         self._disconnect()  # Force reconnection
 
         # Debug information
@@ -285,28 +348,56 @@ class TapoP110Plugin(octoprint.plugin.StartupPlugin,
             self._logger.error("PyP100 library not available for testing")
             return False
 
-        # Test step by step
-        try:
-            self._logger.info("Creating device instance...")
-            device = PyP110.P110(device_ip, username, password)
+        # Test with progressive timeouts like the main connection method
+        timeout_attempts = [5, 10, 15, 30]
 
-            self._logger.info("Testing handshake...")
-            device.handshake()
+        for attempt, timeout_seconds in enumerate(timeout_attempts, 1):
+            try:
+                self._logger.info(f"Test attempt {attempt}/{len(timeout_attempts)} with {timeout_seconds}s timeout")
 
-            self._logger.info("Testing login...")
-            device.login()
+                self._logger.info("Creating device instance...")
+                device = PyP110.P110(device_ip, username, password)
 
-            self._logger.info("Testing device info...")
-            info = device.getDeviceInfo()
-            self._logger.info(f"Device info received: type={type(info)}, content={info}")
+                # Configure timeout
+                self._configure_device_timeout(device, timeout_seconds)
 
-            return True
+                self._logger.info("Testing handshake...")
+                device.handshake()
 
-        except Exception as e:
-            self._logger.error(f"Test connection failed: {e}")
-            import traceback
-            self._logger.error(f"Full traceback: {traceback.format_exc()}")
-            return False
+                self._logger.info("Testing login...")
+                device.login()
+
+                self._logger.info("Testing device info...")
+                info = device.getDeviceInfo()
+                self._logger.info(f"Device info received: type={type(info)}")
+
+                if isinstance(info, dict):
+                    self._logger.info(f"Model: {info.get('model', 'Unknown')}")
+                    self._logger.info(f"Firmware: {info.get('fw_ver', 'Unknown')}")
+                    self._logger.info(f"Device On: {info.get('device_on', 'Unknown')}")
+
+                self._logger.info(f"✅ Test connection successful with {timeout_seconds}s timeout!")
+                return True
+
+            except Exception as e:
+                error_type = type(e).__name__
+
+                if 'timeout' in str(e).lower() or 'read timed out' in str(e).lower():
+                    self._logger.warning(f"Test timeout on attempt {attempt} ({timeout_seconds}s): {e}")
+                    if attempt < len(timeout_attempts):
+                        self._logger.info(f"Retrying test with longer timeout...")
+                        continue
+                    else:
+                        self._logger.error("All test timeout attempts failed")
+                        return False
+                else:
+                    self._logger.error(f"Test connection failed: {e}")
+                    self._logger.error(f"Error type: {error_type}")
+                    import traceback
+                    self._logger.error(f"Full traceback: {traceback.format_exc()}")
+                    return False
+
+        return False
 
     ##~~ Startup
 
