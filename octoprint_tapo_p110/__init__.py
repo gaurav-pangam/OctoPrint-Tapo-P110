@@ -140,24 +140,45 @@ class TapoP110Plugin(octoprint.plugin.StartupPlugin,
             try:
                 self._logger.info(f"Connecting to P110 at {device_ip}")
                 self.device = PyP110.P110(device_ip, username, password)
-                
+
+                self._logger.debug("Performing handshake...")
                 self.device.handshake()
+
+                self._logger.debug("Performing login...")
                 self.device.login()
-                
+
                 # Get device info to verify it's a P110
+                self._logger.debug("Getting device info...")
                 self.device_info = self.device.getDeviceInfo()
-                device_model = self.device_info.get('model', 'Unknown')
-                firmware_version = self.device_info.get('fw_ver', 'Unknown')
-                
+
+                # Handle different response formats
+                if isinstance(self.device_info, dict):
+                    device_model = self.device_info.get('model', 'Unknown')
+                    firmware_version = self.device_info.get('fw_ver', 'Unknown')
+                else:
+                    # Some firmware versions return different formats
+                    self._logger.warning(f"Unexpected device info format: {type(self.device_info)}")
+                    device_model = 'Unknown'
+                    firmware_version = 'Unknown'
+
                 self._logger.info(f"Connected to {device_model} with firmware {firmware_version}")
-                
-                if device_model != 'P110':
+
+                if device_model != 'P110' and device_model != 'Unknown':
                     self._logger.warning(f"Expected P110, but connected to {device_model}")
-                
+
                 return True
-                
+
+            except KeyError as e:
+                self._logger.error(f"Failed to connect to P110 - Response format error: {e}")
+                self._logger.error("This might be a firmware compatibility issue. Try updating your P110 firmware.")
+                self.device = None
+                return False
             except Exception as e:
                 self._logger.error(f"Failed to connect to P110: {e}")
+                self._logger.error(f"Error type: {type(e).__name__}")
+                # Log more details for debugging
+                import traceback
+                self._logger.debug(f"Full traceback: {traceback.format_exc()}")
                 self.device = None
                 return False
 
@@ -212,13 +233,26 @@ class TapoP110Plugin(octoprint.plugin.StartupPlugin,
         """Get device status"""
         if not self._connect():
             return None
-        
+
         try:
             info = self.device.getDeviceInfo()
-            self.last_status = info.get('device_on', False)
-            return info
+
+            # Handle different response formats
+            if isinstance(info, dict):
+                self.last_status = info.get('device_on', False)
+                return info
+            else:
+                self._logger.error(f"Unexpected status response format: {type(info)}")
+                return None
+
+        except KeyError as e:
+            self._logger.error(f"Failed to get status - Response format error: {e}")
+            self._logger.error("This might be a firmware compatibility issue.")
+            self._disconnect()
+            return None
         except Exception as e:
             self._logger.error(f"Failed to get status: {e}")
+            self._logger.error(f"Error type: {type(e).__name__}")
             self._disconnect()
             return None
 
@@ -236,15 +270,60 @@ class TapoP110Plugin(octoprint.plugin.StartupPlugin,
             return None
 
     def _test_connection(self):
-        """Test connection to device"""
+        """Test connection to device with detailed debugging"""
         self._disconnect()  # Force reconnection
-        return self._connect()
+
+        # Debug information
+        device_ip = self._settings.get(["device_ip"])
+        username = self._settings.get(["username"])
+        password = self._settings.get(["password"])
+
+        self._logger.info(f"Testing connection to {device_ip} with user {username}")
+
+        # Check PyP100 availability
+        if PyP110 is None:
+            self._logger.error("PyP100 library not available for testing")
+            return False
+
+        # Test step by step
+        try:
+            self._logger.info("Creating device instance...")
+            device = PyP110.P110(device_ip, username, password)
+
+            self._logger.info("Testing handshake...")
+            device.handshake()
+
+            self._logger.info("Testing login...")
+            device.login()
+
+            self._logger.info("Testing device info...")
+            info = device.getDeviceInfo()
+            self._logger.info(f"Device info received: type={type(info)}, content={info}")
+
+            return True
+
+        except Exception as e:
+            self._logger.error(f"Test connection failed: {e}")
+            import traceback
+            self._logger.error(f"Full traceback: {traceback.format_exc()}")
+            return False
 
     ##~~ Startup
 
     def on_after_startup(self):
         self._logger.info("Tapo P110 Plugin started")
-        
+
+        # Debug PyP100 availability
+        if PyP110 is None:
+            self._logger.error("PyP100 library is not available!")
+        else:
+            try:
+                # Try to get PyP100 version info
+                import PyP100
+                self._logger.info(f"PyP100 library loaded successfully from: {PyP100.__file__}")
+            except Exception as e:
+                self._logger.error(f"PyP100 import issue: {e}")
+
         # Start energy monitoring if enabled
         if self._settings.get_boolean(["enable_energy_monitoring"]):
             self._start_energy_monitoring()
